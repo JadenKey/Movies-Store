@@ -33,6 +33,7 @@ def create_review(request, id):
         review.comment = request.POST['comment']
         review.movie = movie
         review.user = request.user
+        review.reports = 0
         review.save()
         return redirect('movies.show', id=id)
     else:
@@ -63,4 +64,11 @@ def delete_review(request, id, review_id):
         user=request.user)
     review.delete()
     return redirect('movies.show', id=id)
+
+def report_review(request,id, review_id):
+    review = get_object_or_404(Review, id=review_id)
+    review.reports = review.reports + 1
+    review.save()
+    return redirect('movies.show', id=id)
+
 
