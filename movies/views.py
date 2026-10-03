@@ -1,6 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Movie, Review
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.models import User
 
 
 def index(request):
@@ -70,5 +73,13 @@ def report_review(request,id, review_id):
     review.reports = review.reports + 1
     review.save()
     return redirect('movies.show', id=id)
+
+@staff_member_required
+def highest_commenter(request):
+    top_user = User.objects.annotate(comments_num=Count('review')).filter(comments_num__gt=0).order_by('-comments_num').first()
+    template_data = {}
+    template_data['title'] = 'Highest Commenter'
+    template_data['top_user'] = top_user
+    return render(request, 'movies/highest_commenter.html', {'template_data': template_data})
 
 
