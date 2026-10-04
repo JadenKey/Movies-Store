@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Movie, Review
+from .models import Movie, Review, Rating
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count
+from django.db.models import Count, Avg
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
 
@@ -21,9 +21,15 @@ def index(request):
 def show(request, id):
     movie = Movie.objects.get(id=id)
     reviews = Review.objects.filter(movie=movie)
+    average_rating = Rating.objects.filter(movie=movie).aggregate(Avg("stars"))['stars__avg']
+    user_rating = None
+    if (request.user.is_authenticated):
+        user_rating = Rating.objects.filter(movie=movie, user=request.user).first()
     template_data = {}
     template_data['title'] = movie.name
     template_data['movie'] = movie
+    template_data['average_rating'] = average_rating
+    template_data['user_rating'] = user_rating
     template_data['reviews'] = reviews
     return render(request, 'movies/show.html',
                   {'template_data': template_data})
@@ -82,4 +88,13 @@ def highest_commenter(request):
     template_data['top_user'] = top_user
     return render(request, 'movies/highest_commenter.html', {'template_data': template_data})
 
-
+@login_required
+def create_rating(request, id):
+    if request.method == 'POST':
+        movie = get_object_or_404(Movie, id=id)
+        stars = request.POST.get('stars')
+        if stars in ['1', '2', '3', '4', '5']:
+            Rating.objects.update_or_create(movie=movie, user=request.user, defaults={'stars': int(stars)})
+        return redirect('movies.show', id=id)
+    else:
+        return redirect('movies.show', id=id)
