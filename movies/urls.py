@@ -12,4 +12,5 @@ urlpatterns = [
     path('<int:id>/review/<int:review_id>/report/',
         views.report_review, name='movies.report_review'),
     path('highest-commenter/', views.highest_commenter, name='movies.highest_commenter'),
+    path('<int:id>/rating/', views.create_rating, name='movies.create_rating'),
 ]
