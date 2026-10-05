@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Movie, Review, Rating
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Avg
+from django.db.models import Count, Avg, Sum
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
 
@@ -87,6 +87,17 @@ def highest_commenter(request):
     template_data['title'] = 'Highest Commenter'
     template_data['top_user'] = top_user
     return render(request, 'movies/highest_commenter.html', {'template_data': template_data})
+
+@staff_member_required
+def movie_stats(request):
+    most_purchased = Movie.objects.annotate(purchase_sum = Sum('item__quantity')).filter(purchase_sum__gt=0).order_by("-purchase_sum").first()
+    most_reviewed = Movie.objects.annotate(review_sum = Count('review')).filter(review_sum__gt=0).order_by("-review_sum").first()
+    template_data = {}
+    template_data['title'] = 'Movie stats'
+    template_data['most_purchased'] = most_purchased
+    template_data['most_reviewed'] = most_reviewed
+    return render(request, 'movies/movie_stats.html', {"template_data": template_data})
+    
 
 @login_required
 def create_rating(request, id):
