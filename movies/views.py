@@ -97,7 +97,25 @@ def movie_stats(request):
     template_data['most_purchased'] = most_purchased
     template_data['most_reviewed'] = most_reviewed
     return render(request, 'movies/movie_stats.html', {"template_data": template_data})
-    
+
+@staff_member_required
+def top_purchaser(request):
+    top_user = (
+        User.objects.filter(is_staff=False)
+        .annotate(movies_purchased=Sum("order__item__quantity"))
+        .filter(movies_purchased__gt=0)
+        .order_by("-movies_purchased", "username")
+        .first()
+    )
+
+    template_data = {}
+    template_data["title"] = "Top Purchaser"
+    template_data["top_user"] = top_user
+
+    return render(
+        request, "movies/top_purchaser.html", 
+        {"template_data": template_data}
+    )
 
 @login_required
 def create_rating(request, id):
