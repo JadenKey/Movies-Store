@@ -14,5 +14,6 @@ urlpatterns = [
     path('highest-commenter/', views.highest_commenter, name='movies.highest_commenter'),
     path('<int:id>/rating/', views.create_rating, name='movies.create_rating'),
     path('movie_stats/', views.movie_stats, name='movies.movie_stats'),
-    path('top-purchaser/', views.top_purchaser, name = 'movies.top_purchaser')
+    path('top-purchaser/', views.top_purchaser, name = 'movies.top_purchaser'),
+    path('popularity-map/', views.popularity_map, name='movies.popularity_map')
 ]

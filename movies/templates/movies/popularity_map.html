@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<div class="p-3">
+    <div class="container">
+        <div class="row mt-3">
+            <div class="col-md-8 mx-auto mb-3">
+                <h2>Local Popularity Map</h2>
+                <hr />
+                <div id="map" style="height: 400px;"></div>
+                <hr />
+                {% if template_data.selected_region %}
+                <h3>Top Movies in {{ template_data.selected_region.name }}</h3>
+                <table class="table">
+                    <tr><th>Movie</th><th>Times Purchased</th></tr>
+                    {% for movie in template_data.selected_region.movies %}
+                    <tr><td>{{movie.movie__name }}</td><td>{{ movie.total }}</td></tr>
+                    {% empty %}
+                    <tr><td colspan="2">No purchases</td></tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+                <p>Click a region to see its top movies</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var map = L.map('map').setView([39, -96], 4);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {attribution: '&copy; Esri'}).addTo(map);
+    {% for region in template_data.regions %}
+    L.circleMarker([{{ region.lat }}, {{ region.lng }}]).addTo(map)
+      .bindTooltip("<b>{{ region.name }}</b><br>{% if region.movies %}Trending: {{region.movies.0.movie__name|force_escape|escapejs }}{% else %}No Purchases{% endif %}", {permanent: true})
+      .on('click', function () { window.location = '?region={{ region.code }}'; });
+    {% endfor %}
+</script>
+{% endblock content %}

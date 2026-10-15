@@ -4,7 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Avg, Sum
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
-
+from accounts.models import REGIONS
+from cart.models import Item
 
 def index(request):
     search_term = request.GET.get('search')
@@ -116,6 +117,22 @@ def top_purchaser(request):
         request, "movies/top_purchaser.html", 
         {"template_data": template_data}
     )
+
+@login_required
+def popularity_map(request):
+    regions = []
+    for code, (name, lat, lng) in REGIONS.items():
+        movies = Item.objects.filter(order__user__profile__region=code).values(
+            'movie__name').annotate(total=Sum('quantity')).order_by('-total')
+        regions.append({'code': code, 'name': name, 'lat': lat, 'lng': lng, 'movies': movies})
+    template_data = {}
+    template_data['title'] = 'Local Popularity Map'
+    template_data['regions'] = regions
+    for region in regions:
+        if region['code'] == request.GET.get('region'):
+            template_data['selected_region'] = region
+    return render(request, 'movies/popularity_map.html', {'template_data': template_data})
+
 
 @login_required
 def create_rating(request, id):
